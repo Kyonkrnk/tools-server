@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<!--見ないで！変態！-->
+<html>
+<head>
+  <title>URLから動画、音源をダウンロード</title>
+  <style>
+    /* 次回更新時に変更 */
+    header {
+      background-color: rgb(30, 40, 54);
+      color: #e979ff;
+      padding: 0px;
+      text-align: center;
+      font-size: 35px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      box-shadow: 0px 0px 10px 0px rgba(0,0,0,0);
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: rgb(30, 40, 54);
+      background-size: cover;
+      background-position: center;
+      text-align: center;
+      margin: 0;
+      padding: 40px;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 20px;
+      margin-top: 30px;
+      color: #ffffff;
+    }
+
+    h3 {
+      text-align: left;
+      margin-top: 100px;
+      color: #000000;
+      border: 1px solid #ced4da;
+      padding: 15px;
+      border-radius: 5px;
+      background-color: #ffffff;
+      display: inline-block;
+    }
+
+    form {
+      max-width: 400px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 30px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="text"],
+    select {
+      width: 90%;
+      padding: 10px;
+      margin-bottom: 30px;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      color: #495057;
+    }
+
+    input[type="submit"] {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+      background-color: rgb(188, 204, 255);
+      color: #fff;
+    }
+
+    .download-message {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+      color: #fff;
+    }
+  </style>
+  </head>
+<body>
+  <header>動画・音源ダウンローダー</header>
+  <h2>一部動画サイトはダウンロードに時間がかかる場合があります。</h2><br>
+    <form id="download-form" method="post" action="/media_dl" autocomplete="off">
+      <label for="url">URL(譜面ID)</label>
+      <input type="text" id="url" name="url">
+      <br>
+      <label for="format">フォーマット</label>
+      <select id="format" name="format">
+          <option value="mp3">MP3</option>
+          <option value="wav">WAV</option>
+          <option value="mp4">MP4</option>
+          <option value="cc">水板(mp3)</option>
+      </select>
+      <br>
+      <label for="silence">音楽が始まるまでの空白を削除する(β)</label>
+      <select id="silence" name="silence">
+          <option value="false">削除しない</option>
+          <option value="true">削除する</option>
+      </select>
+      <p>
+      <input type="submit" value="ダウンロード">
+    </form>
+    <h3>
+      【更新情報】<p>
+        2023/10/08　「この動画をダウンロードする！」ボタンを連打できないように変更しました。<p>
+        2023/10/08　フレームワークをFlaskからFastAPIに変更しました。<p>
+        2023/09/21　Chart Cyanvasから音源をダウンロードする機能を追加しました。<p>
+        2023/08/23　元動画よりも音量が大きくなる問題を修正しました。<p>
+        2023/08/15　空白カット機能(β版)を実装しました。
+    </h3>
+    <div id="download-message" class="download-message" style="display: none;">
+      <p>処理中です...<p>
+    </div>
+
+    <script>
+    const downloadForm = document.querySelector('form');
+
+    const downloadMessage = document.getElementById('download-message');
+
+    downloadForm.addEventListener('submit', () => {
+      downloadMessage.style.display = 'block';
+    });
+
+    window.addEventListener('unload', () => {
+      downloadMessage.style.display = 'none';
+    });
+    </script>
+</body>
+</html>
