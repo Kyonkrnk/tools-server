@@ -51,7 +51,7 @@ async def download_media(
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
-    if (silence == "true") and (format != "mp4"):
+    if (silence == True) and (format != "mp4"):
         filepath = os.path.join(currentpath, "media", f"original_{title}.wav")
         command = [
             'ffmpeg',
