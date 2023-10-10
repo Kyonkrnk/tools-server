@@ -17,12 +17,12 @@ templates = Jinja2Templates(directory=templates_path)
 
 
 @router.get('/media_dl')
-async def media_dl_form():
+def media_dl_form():
     path = os.path.join("templates", "media_dl", "index.html")
     return FileResponse(path)
 
 @router.post('/media_dl')
-async def media_dl_info(
+def media_dl_info(
     request: Request,
     url = Form(None), 
     format = Form(), 

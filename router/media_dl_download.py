@@ -12,7 +12,7 @@ currentpath = os.getcwd()
 router = APIRouter()
 
 @router.post('/media_dl/download')
-async def download_media(
+def download_media(
     request_id: str
 ):  
     path = os.path.join("media_info", f"{request_id}.json")

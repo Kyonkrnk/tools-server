@@ -9,11 +9,11 @@ app.include_router(media_dl.router)
 app.include_router(media_dl_download.router)
 
 @app.get('/')
-async def index():
+def index():
     return {"message": "Hello, World!"}
 
 @app.get('/favicon.ico', include_in_schema=False)
-async def icon():
+def icon():
     return FileResponse("favicon.ico")
 
 if __name__ == "__main__":
