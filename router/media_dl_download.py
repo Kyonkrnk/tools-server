@@ -62,7 +62,7 @@ def download_media(
 
     # 空白カットが選択されていた場合
     if (silence == True) and (format != "mp4"):
-        filepath = os.path.join(currentpath, "media", f"{title}.wav")
+        filepath = os.path.join(currentpath, "media", f"{title}.{format}")
         command = [
             'ffmpeg',
             '-i', filepath,
@@ -87,17 +87,16 @@ def download_media(
             else:
                 search_end = re.search(r'silence_end: (\d+\.\d+)', line)
                 search_duration = re.search(r'silence_duration: (\d+\.\d+)', line)
-                if (search_end == None) or (search_duration == None):
-                    continue
-                if search_end.group(1) == search_duration.group(1):
-                    silence_end_time = float(search_end.group(1))
-                    if silence_end_time < 10:
-                        silence_time = f"00:00:0{search_end.group(1)}"
-                    elif 10 <= silence_end_time < 60:
-                        silence_time = f"00:00:{search_end.group(1)}"
-                    else:
-                        return "空白が1分以上あるため処理に失敗しました。"
-                    break
+                if search_end and search_duration:
+                    if search_end.group(1) == search_duration.group(1):
+                        silence_end_time = float(search_end.group(1))
+                        if silence_end_time < 10:
+                            silence_time = f"00:00:0{search_end.group(1)}"
+                        elif 10 <= silence_end_time < 60:
+                            silence_time = f"00:00:{search_end.group(1)}"
+                        else:
+                            return "空白が1分以上あるため処理に失敗しました。"
+                        break
         if format == "mp3":
             command = [
                 'ffmpeg',
@@ -116,7 +115,7 @@ def download_media(
                 f"media/cut_{title}.{format}"
             ]
         subprocess.run(command)
-        os.remove(f"media/{title}.wav")
+        os.remove(f"media/{title}.{format}")
 
         # ファイルを送信する
         with open(f"media/cut_{title}.{format}", "rb") as f:
