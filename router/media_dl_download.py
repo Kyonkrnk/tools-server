@@ -31,15 +31,14 @@ def download_media(
             if len(title.encode()) < 160:
                 title += "_"
 
-    # 以下Flask版から移植、後日書き直し
+    # ダウンロード
     ydl_opts = {
         'format': 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[ext=mp4]',
-        'outtmpl': f'./media/original_{title}',
+        'outtmpl': f'./media/{title}',
         'noplaylist': True,
         'user_agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
     }
-
-    if format != 'mp4':
+    if format == 'wav':
         ydl_opts['postprocessors'] = [
             {
                 'key': 'FFmpegExtractAudio',
@@ -47,16 +46,27 @@ def download_media(
             }
         ]
         ydl_opts['format'] = 'bestaudio/best'
+    if format == 'mp3':
+        ydl_opts['postprocessors'] = [
+            {
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'bestaudio/best',
+                'preferredquality': '320k'
+            }
+        ]
+        ydl_opts['format'] = 'bestaudio/best'   
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
+
+    # 空白カットが選択されていた場合
     if (silence == True) and (format != "mp4"):
-        filepath = os.path.join(currentpath, "media", f"original_{title}.wav")
+        filepath = os.path.join(currentpath, "media", f"{title}.wav")
         command = [
             'ffmpeg',
             '-i', filepath,
-            '-af', 'silencedetect=n=-50dB:d=0.01',
+            '-af', 'silencedetect=n=-50dB:d=0.001',
             '-f', 'null', '-'
         ]
         calc_silence_time = subprocess.run(command, stderr=subprocess.PIPE)
@@ -77,16 +87,17 @@ def download_media(
             else:
                 search_end = re.search(r'silence_end: (\d+\.\d+)', line)
                 search_duration = re.search(r'silence_duration: (\d+\.\d+)', line)
-                if search_end and search_duration:
-                    if search_end.group(1) == search_duration.group(1):
-                        silence_end_time = float(search_end.group(1))
-                        if silence_end_time < 10:
-                            silence_time = f"00:00:0{search_end.group(1)}"
-                        elif 10 <= silence_end_time < 60:
-                            silence_time = f"00:00:{search_end.group(1)}"
-                        else:
-                            return "空白が1分以上あるため処理に失敗しました。"
-                        break
+                if (search_end == None) or (search_duration == None):
+                    continue
+                if search_end.group(1) == search_duration.group(1):
+                    silence_end_time = float(search_end.group(1))
+                    if silence_end_time < 10:
+                        silence_time = f"00:00:0{search_end.group(1)}"
+                    elif 10 <= silence_end_time < 60:
+                        silence_time = f"00:00:{search_end.group(1)}"
+                    else:
+                        return "空白が1分以上あるため処理に失敗しました。"
+                    break
         if format == "mp3":
             command = [
                 'ffmpeg',
@@ -94,7 +105,6 @@ def download_media(
                 '-ss', f'{silence_time}',
                 '-i', filepath,
                 '-b:a', '320k',
-                '-af', 'volume=-4dB',
                 f"media/cut_{title}.{format}"
             ]
         if format == "wav":
@@ -103,11 +113,12 @@ def download_media(
                 '-y',
                 '-ss', f'{silence_time}',
                 '-i', filepath,
-                '-af', 'volume=-4dB',
                 f"media/cut_{title}.{format}"
             ]
         subprocess.run(command)
-        os.remove(f"media/original_{title}.wav")
+        os.remove(f"media/{title}.wav")
+
+        # ファイルを送信する
         with open(f"media/cut_{title}.{format}", "rb") as f:
             data = f.read()
         response = Response(
@@ -117,41 +128,9 @@ def download_media(
             status_code = 200
         )
         return response
+    
 
-    if format == 'mp3':
-        command = [
-            'ffmpeg',
-            '-y',
-            '-i', f'media/original_{title}.wav',
-            '-b:a', '320k',
-            '-af', 'volume=-4dB',
-            f"media/{title}.{format}"
-        ]
-        subprocess.run(command)
-        os.remove(f'media/original_{title}.wav')
-    elif format == 'wav':
-        command = [
-            'ffmpeg',
-            '-y',
-            '-i', f'media/original_{title}.wav',
-            '-af', 'volume=-4dB',
-            f"media/{title}.{format}"
-        ]
-        subprocess.run(command)
-        os.remove(f'media/original_{title}.wav')
-    elif format == "mp4":
-        command = [
-            'ffmpeg',
-            '-y',
-            '-i', f'media/original_{title}.mp4',
-            '-c:v', 'copy',
-            '-b:a', '320k',
-            '-af', 'volume=-4dB',
-            f"media/{title}.{format}"
-        ]
-        subprocess.run(command)
-        os.remove(f'media/original_{title}.mp4')
-
+    # ファイルを送信する
     with open(f"media/{title}.{format}", "rb") as f:
         data = f.read()
     response = Response(

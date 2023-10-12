@@ -84,11 +84,20 @@
       color: #fff;
     }
 
+    input[type="submit"]:disabled {
+      cursor: not-allowed; /* 無効時のカーソルスタイル */
+    }
+
     .download-message {
       display: none;
       text-align: center;
       margin-top: 20px;
       color: #fff;
+    }
+
+    a {
+      color: blue;
+      text-decoration: underline;
     }
   </style>
   </head>
@@ -96,7 +105,7 @@
   <header>動画・音源ダウンローダー</header>
   <h2>一部動画サイトはダウンロードに時間がかかる場合があります。</h2><br>
     <form id="download-form" method="post" action="/media_dl" autocomplete="off">
-      <label for="url">URL(譜面ID)</label>
+      <label for="url">URL(または水板の譜面ID)</label>
       <input type="text" id="url" name="url">
       <br>
       <label for="format">フォーマット</label>
@@ -104,35 +113,42 @@
           <option value="mp3">MP3</option>
           <option value="wav">WAV</option>
           <option value="mp4">MP4</option>
-          <option value="cc">水板(mp3)</option>
+          <option value="cc">水板 (MP3)</option>
       </select>
       <br>
       <label for="silence">音楽が始まるまでの空白を削除する(β)</label>
       <select id="silence" name="silence">
           <option value="false">削除しない</option>
-          <option value="true">削除する</option>
+          <option value="true">削除する (mp3、wavの場合のみ使用可能)</option>
       </select>
       <p>
-      <input type="submit" value="ダウンロード">
+      <input type="submit" value="ダウンロード" id="download-button">
     </form>
     <h3>
-      【更新情報】<p>
-        2023/10/08　「この動画をダウンロードする！」ボタンを連打できないように変更しました。<p>
+      【更新履歴】<p>
+        2023/10/13　空白カットの精度を向上させました。<p>
+        2023/10/13　音源の音量を大きくしました。<p>
+        2023/10/13　ダウンロードボタンを連打できないように変更しました。<p>
         2023/10/08　フレームワークをFlaskからFastAPIに変更しました。<p>
         2023/09/21　Chart Cyanvasから音源をダウンロードする機能を追加しました。<p>
         2023/08/23　元動画よりも音量が大きくなる問題を修正しました。<p>
-        2023/08/15　空白カット機能(β版)を実装しました。
+        2023/08/15　空白カット機能(β版)を実装しました。<p>
+        <a href="https://github.com/Kyonkrnk/tools-server" target="_blank">https://github.com/Kyonkrnk/tools-server</a>
     </h3>
+    <div></div>
+    
     <div id="download-message" class="download-message" style="display: none;">
       <p>処理中です...<p>
     </div>
 
     <script>
     const downloadForm = document.querySelector('form');
-
+    const downloadButton = document.querySelector('#download-button');
     const downloadMessage = document.getElementById('download-message');
 
     downloadForm.addEventListener('submit', () => {
+      downloadButton.disabled = true; // ボタンを無効化
+      downloadButton.style.backgroundColor = 'limegreen'; // ボタンの背景色を変更
       downloadMessage.style.display = 'block';
     });
 
