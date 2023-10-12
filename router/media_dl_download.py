@@ -50,7 +50,7 @@ def download_media(
         ydl_opts['postprocessors'] = [
             {
                 'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'bestaudio/best',
+                'preferredcodec': 'mp3',
                 'preferredquality': '320k'
             }
         ]
