@@ -44,6 +44,9 @@ def media_dl_info(
 
     # 水板からのダウンロードが選択された場合
     if format == "cc":
+        if "http" in url:
+            url = url.split('/')
+            url = url[-1]
         if "chcy-" in url:
             url = url.replace("chcy-", "")
         level_url = f"https://cc.sevenc7c.com/sonolus/levels/chcy-{url}"

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <title>YouTubeから動画、音源をダウンロード</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(30, 40, 54);
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+            margin: 0;
+            padding: 40px;
+            }
+        h1 {
+            color: white;
+        }
+        table {
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            width: auto;
+            margin: 0 auto;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 12px;
+            text-align: center;
+            vertical-align: top;
+            font-size: 20px;
+        }
+        th {
+            background-color: #eee;
+            font-weight: bold;
+        }
+        input[type="submit"] {
+            display: inline-block;
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            font-size: 16px;
+            padding: 10px 30px;
+            margin-top: 50px;
+            cursor: pointer;
+            height: 80px;
+            border: none;
+        }
+        input[type="submit"]:hover {
+            background-color: rgb(188, 204, 255);
+        }
+        .flex{
+            display: flex;
+        }
+        input[type="submit"]:disabled {
+            cursor: not-allowed;
+        }
+        iframe{
+            margin: 0 auto;
+        }
+        .download-message{
+            color: #fff;
+            margin-top: 25px;
+        }
+    </style>
+</head>
+<body>
+    <h1>以下の動画をダウンロードしますか？</h1>
+    <div class="flex">
+        <table>
+            <tr>
+                <tr style="background-color: white;">
+                <th>タイトル</th>
+                <td>{{ title }}</td>
+            </tr>
+            <tr>
+                <tr style="background-color: white;">
+                <th>URL</th>
+                <td>{{ url }}</td>
+            </tr>
+            <tr>
+                <tr style="background-color: white;">
+                <th>フォーマット</th>
+                <td>{{ format }}</td>
+            </tr>
+        </table>
+        <img src="{{ thumbnail }}" width="50%" height="auto">
+    </div>
+    <input type="submit" value="この動画をダウンロードする！" id="download-button">
+    <div id="download-message" class="download-message" style="display: none;">
+        ダウンロード中です...<p>サーバーの負荷状況によって時間がかかる場合があります。</p>
+    </div>
+</body>
+
+    <script>
+        const downloadButton = document.getElementById("download-button");
+        const downloadMessage = document.getElementById("download-message");
+
+        let intervalId;
+
+        downloadButton.addEventListener("click", () => 
+        {
+            downloadButton.disabled = true; // ボタンを無効化
+            downloadButton.style.backgroundColor = "limegreen"; // ボタンを黄緑に変更
+            downloadMessage.style.display = "block"; // ダウンロードメッセージを表示する
+
+            /* ポーリングでサーバーと通信を行い処理状況を取得する */
+            sendRequest();
+            intervalId = setInterval(sendRequest, 2000); // 2秒ごとにリクエストを送信する
+        })
+
+        function sendRequest() 
+        {
+            const xhr = new XMLHttpRequest();
+            const url = "{{ request_url }}";
+            xhr.open("GET", url, true);
+            xhr.onreadystatechange = function () 
+            {   if (xhr.readyState === 4 && xhr.status === 307)
+                {
+                    return
+                }
+                if (xhr.readyState === 4 && xhr.status === 200) 
+                {
+                    downloadMessage.textContent = JSON.parse(xhr.responseText).message;
+                }
+                if (JSON.parse(xhr.responseText).status === "yes")
+                {   
+                    clearInterval(intervalId)
+                    window.location.href = JSON.parse(xhr.responseText).download_url;
+                }
+            }
+            xhr.send();
+        }
+
+    </script>
+
+</html>
