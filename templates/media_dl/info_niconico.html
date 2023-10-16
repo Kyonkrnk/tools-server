@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
     <title>ニコニコから動画、音源をダウンロード</title>
     <style>
@@ -34,7 +34,6 @@
         }
         input[type="submit"] {
             display: inline-block;
-            border-radius: 3px;
             background-color: #007bff;
             color: #fff;
             text-align: center;
@@ -43,21 +42,23 @@
             margin-top: 50px;
             cursor: pointer;
             height: 80px;
+            border: none;
         }
         input[type="submit"]:hover {
-            background-color: rgb(188, 204, 255);;
+            background-color: rgb(188, 204, 255);
         }
         .flex{
             display: flex;
         }
         input[type="submit"]:disabled {
-            cursor: not-allowed; /* 無効時のカーソルスタイル */
+            cursor: not-allowed;
         }
         iframe{
             margin: 0 auto;
         }
         .download-message{
-            color: #fff
+            color: #fff;
+            margin-top: 25px;
         }
     </style>
 </head>
@@ -81,29 +82,56 @@
                 <td>{{ format }}</td>
             </tr>
         </table>
-        <script type="application/javascript" src="https://embed.nicovideo.jp/watch/{{ v_id }}/script?w=720&h=405"></script>
+        <script type="application/javascript" src="https://embed.nicovideo.jp/watch/{{ v_id }}/script?w=720&h=405"></script><noscript><a href="https://www.nicovideo.jp/watch/{{ v_id }}">{{ title }}</a></noscript>
+        <!--<script type="application/javascript" src="https://embed.nicovideo.jp/watch/{{ v_id }}/script?w=720&h=405"></script> -->
     </div>
-    <form id="download-form" method="post" action="/media_dl/download?request_id={{ request_id }}">
-        <input type="submit" value="この動画をダウンロードする！" id="download-button">
-    </form>
+    <input type="submit" value="この動画をダウンロードする！" id="download-button">
+    <div id="download-message" class="download-message" style="display: none;">
+        ダウンロード中です...<p>サーバーの負荷状況によって時間がかかる場合があります。</p>
+    </div>
 </body>
-<div id="download-message" class="download-message" style="display: none;">
-    <p>ダウンロード中です...<p>サーバーの負荷状況によって時間がかかる場合があります。
-</div>
 
-<script>
-  const downloadForm = document.querySelector('#download-form');
-  const downloadButton = document.querySelector('#download-button');
-  const downloadMessage = document.getElementById('download-message');
+    <script>
+        const downloadButton = document.getElementById("download-button");
+        const downloadMessage = document.getElementById("download-message");
 
-  downloadForm.addEventListener('submit', () => {
-    downloadButton.disabled = true; // ボタンを無効化
-    downloadButton.style.backgroundColor = 'limegreen'; // ボタンの背景色を変更
-    downloadMessage.style.display = 'block';
-  });
+        let intervalId;
 
-  window.addEventListener('unload', () => {
-    downloadMessage.style.display = 'none';
-  });
-</script>
+        downloadButton.addEventListener("click", () => 
+        {
+            downloadButton.disabled = true; // ボタンを無効化
+            downloadButton.style.backgroundColor = "limegreen"; // ボタンを黄緑に変更
+            downloadMessage.style.display = "block"; // ダウンロードメッセージを表示する
+
+            /* ポーリングでサーバーと通信を行い処理状況を取得する */
+            sendRequest();
+            intervalId = setInterval(sendRequest, 3000); // 3秒ごとにリクエストを送信する
+        })
+
+        function sendRequest() 
+        {
+            const xhr = new XMLHttpRequest();
+            const url = "{{ request_url }}";
+            xhr.open("GET", url, true);
+            xhr.onreadystatechange = function () 
+            {   
+                if (xhr.readyState === 4 && xhr.status === 307)
+                {
+                    return
+                }
+                else if (xhr.readyState === 4 && xhr.status === 200) 
+                {
+                    downloadMessage.textContent = JSON.parse(xhr.responseText).message;
+                }
+                else if (JSON.parse(xhr.responseText).status === "yes")
+                {   
+                    clearInterval(intervalId)
+                    window.location.href = JSON.parse(xhr.responseText).download_url;
+                }
+            }
+            xhr.send();
+        }
+
+    </script>
+
 </html>

@@ -14,6 +14,9 @@ from urllib.parse import quote
 router = APIRouter()
 templates_path = os.path.join("templates", "media_dl")
 templates = Jinja2Templates(directory=templates_path)
+with open("config.json", encoding="utf-8") as f:
+    conf = json.load(f)
+    host = conf["Host"]
 
 
 @router.get('/media_dl')
@@ -60,10 +63,12 @@ def media_dl_info(
         return response
     
     request_id = str(uuid.uuid4())
+    request_url = f"{host}/media_dl/api/status/{request_id}"
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')
     with yt_dlp.YoutubeDL() as ydl:
         info = ydl.extract_info(url, download=False)
         info_dict = {
+            'status': "no",
             'time': now,
             'id': info["id"],
             'title': info['title'],
@@ -85,7 +90,7 @@ def media_dl_info(
                         "url": url, 
                         "format": format, 
                         "v_id": info_dict["id"], 
-                        "request_id": request_id
+                        "request_url": request_url
                     }
                 )
     elif "nico" in url:
@@ -97,7 +102,7 @@ def media_dl_info(
                         "url": url, 
                         "format": format, 
                         "v_id": info_dict["id"], 
-                        "request_id": request_id
+                        "request_url": request_url
                     }
                 )
     else:
@@ -110,6 +115,6 @@ def media_dl_info(
                         "format": format, 
                         "v_id": info_dict["id"], 
                         "thumbnail": info["thumbnail"],
-                        "request_id": request_id
+                        "request_url": request_url
                     }
                 )    
