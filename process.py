@@ -15,12 +15,12 @@ def restart_process():
                 flg += 1
                 subprocess.run(["kill", p_id]) #プロセスをキルする
                 time.sleep(5)
-                subprocess.run(["nohup python3 main.py"]) #プロセスを起動する
+                subprocess.run(["nohup", "python3", "main.py"]) #プロセスを起動する
         except: #プロセスへのアクセス権がない場合
             pass
 
     if flg == 0:
-        subprocess.run(["nohup python3 main.py"]) #プロセスを起動する
+        subprocess.run(["nohup", "python3", "main.py"]) #プロセスを起動する
 
 
 while True:
