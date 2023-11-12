@@ -2,63 +2,53 @@ from fastapi import APIRouter
 
 import os
 import re
-import json
 import yt_dlp
 import subprocess
-
-import sys
+import router.media_dl_json as media_dl_json
 
 currentpath = os.getcwd()
 router = APIRouter()
 
 def update_status(request_id, status):
-    with open(f"media_info/{request_id}.json", encoding="utf-8") as f:
-        info = json.load(f)
-        info["status"] = status
-    with open(f"media_info/{request_id}.json", "w", encoding="utf-8") as f:
-        json.dump(info, f, indent=4, ensure_ascii=False)
+    write_data = {
+        "status": status
+    }
+    media_dl_json.write_json(request_id, write_data)
 
 def update_info(request_id, path):
-    with open(f"media_info/{request_id}.json", encoding="utf-8") as f:
-        info = json.load(f)
-        info["path"] = path
-        info["status"] = "yes"
-        info["download_url"] = f"/media_dl/api/download/{request_id}"
-    with open(f"media_info/{request_id}.json", "w", encoding="utf-8") as f:
-        json.dump(info, f, indent=4, ensure_ascii=False)
+    write_data = {
+        "path": path,
+        "status": "yes",
+        "download_url": f"/media_dl/api/download/{request_id}"
+    }
+    media_dl_json.write_json(request_id, write_data)
 
 pattern = re.compile(r'(\d+\.\d+)%')
 def progress_hook(progress_data, request_id):
-    with open(f"media_info/{request_id}.json", encoding="utf-8") as f:
-        info = json.load(f)    
     if progress_data['status'] == 'downloading':
         percent = re.search(pattern, progress_data['_percent_str'])
         if percent != None:
-            info["percent"] = percent.group(1)
-    with open(f"media_info/{request_id}.json", "w", encoding="utf-8") as f:
-        json.dump(info, f, indent=4, ensure_ascii=False)            
+            info = {
+                "percent": percent.group(1)
+            }
+            media_dl_json.write_json(request_id, info)
 
 
 
 @router.get('/media_dl/download/{request_id}')
-def download_media(
-    request_id: str
-):  
-    path = os.path.join("media_info", f"{request_id}.json")
-    with open(path, encoding="UTF-8") as fileobj:
-        info = json.load(fileobj)
-        url = info["url"]
-        title = info["title"]
-        format = info["format"]
-        silence = bool(info["silence"])
-
-        # ファイル名に使えない文字を除外する
-        title = re.sub(r'[\\/:*?"<>|]+', '', title)
-        # ファイル名が長すぎる場合保存できないので短くする
-        while len(title.encode()) >= 160:
-            title = title[:-2]
-            if len(title.encode()) < 160:
-                title += "_"
+def download_media(request_id: str):  
+    info = media_dl_json.load_json(request_id)
+    url = info["url"]
+    title = info["title"]
+    format = info["format"]
+    silence = bool(info["silence"])
+    # ファイル名に使えない文字を除外する
+    title = re.sub(r'[\\/:*?"<>|]+', '', title)
+    # ファイル名が長すぎる場合保存できないので短くする
+    while len(title.encode()) >= 160:
+        title = title[:-2]
+        if len(title.encode()) < 160:
+            title += "_"
 
     # ダウンロード
     ydl_opts = {
@@ -117,7 +107,6 @@ def download_media(
                 else:
                     return "空白が1分以上あるため処理に失敗しました。"
                 break
-
             else:
                 search_end = re.search(r'silence_end: (\d+\.\d+)', line)
                 search_duration = re.search(r'silence_duration: (\d+\.\d+)', line)
@@ -131,6 +120,7 @@ def download_media(
                         else:
                             return "空白が1分以上あるため処理に失敗しました。"
                         break
+
         if format == "mp3":
             command = [
                 'ffmpeg',
@@ -154,7 +144,6 @@ def download_media(
         # infoファイルを更新する
         update_info(request_id, f"media/cut_{title}.{format}")
         return
-    
     
     # infoファイルを更新する
     update_info(request_id, f"media/{title}.{format}")

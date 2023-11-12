@@ -1,20 +1,16 @@
 from fastapi import APIRouter, Response
 from fastapi.responses import RedirectResponse
 
-from urllib.parse import quote
-
-import json
 import re
-import os
+from urllib.parse import quote
+import router.media_dl_json as media_dl_json
 
 router = APIRouter()
 
 @router.get('/media_dl/api/status/{request_id}')
 def media_status(request_id: str):
-    with open(f"media_info/{request_id}.json", encoding="utf-8") as f:
-        info = json.load(f)
-        status = info["status"]
-
+    info = media_dl_json.load_json(request_id)
+    status = info["status"]
     if status == "no":
         return RedirectResponse(f"/media_dl/download/{request_id}")
     elif status == "downloading":
@@ -32,18 +28,17 @@ def media_status(request_id: str):
 
 @router.get('/media_dl/api/download/{request_id}')
 def response_media(request_id: str):
-    with open(f"media_info/{request_id}.json", encoding="utf-8") as f:
-        info = json.load(f)
-        path = info["path"]
-        title = info["title"]
-        format = info["format"]
-        # ファイル名に使えない文字を除外する
-        title = re.sub(r'[\\/:*?"<>|]+', '', title)
-        # ファイル名が長すぎる場合保存できないので短くする
-        while len(title.encode()) >= 160:
-            title = title[:-2]
-            if len(title.encode()) < 160:
-                title += "_"
+    info = media_dl_json.load_json(request_id)
+    path = info["path"]
+    title = info["title"]
+    format = info["format"]
+    # ファイル名に使えない文字を除外する
+    title = re.sub(r'[\\/:*?"<>|]+', '', title)
+    # ファイル名が長すぎる場合保存できないので短くする
+    while len(title.encode()) >= 160:
+        title = title[:-2]
+        if len(title.encode()) < 160:
+            title += "_"
 
     # ファイルを返す
     with open(path, "rb") as f:
