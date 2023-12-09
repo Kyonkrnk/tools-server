@@ -93,7 +93,6 @@ def media_dl_info(
                         "url": url, 
                         "format": format, 
                         "v_id": info_dict["id"],
-                        "thumbnail": info["thumbnail"],
                         "request_url": request_url
                     }
                 )
@@ -106,7 +105,6 @@ def media_dl_info(
                         "url": url, 
                         "format": format, 
                         "v_id": info_dict["id"],
-                        "thumbnail": info["thumbnail"],
                         "request_url": request_url
                     }
                 )

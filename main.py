@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from router import media_dl, media_dl_download, media_dl_api
+from router import media_dl, media_dl_download, media_dl_api, media_dl_adm
 
 import json
 with open("config.json", encoding="utf-8") as f:
@@ -21,6 +21,7 @@ app.add_middleware(
 app.include_router(media_dl.router)
 app.include_router(media_dl_download.router)
 app.include_router(media_dl_api.router)
+app.include_router(media_dl_adm.router)
 
 
 @app.get('/')

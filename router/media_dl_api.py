@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Response
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 
 import re
 from urllib.parse import quote
@@ -49,4 +49,18 @@ def response_media(request_id: str):
         headers = {"Content-Length": str(len(data)), "Content-Disposition": f'attachment; filename="{quote(title)}.{quote(format)}"'},
         status_code = 200
     )
+    return response
+
+
+@router.get('/media_dl/api/info/{request_id}')
+def response_info(request_id: str):
+    data = media_dl_json.load_json(request_id)
+    response = {
+        "time": data["time"],
+        "title": data["title"],
+        "link": data["url"],
+        "format": data["format"],
+        "thumbnail": data["thumbnail"],
+        "download_url": data["download_url"]
+    }
     return response

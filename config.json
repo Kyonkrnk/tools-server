@@ -1,3 +1,4 @@
 {
-    "Host": "http://localhost:5000"
+    "Host": "http://localhost:5000",
+    "password": "abcdef"
 }
