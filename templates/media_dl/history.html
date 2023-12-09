@@ -67,7 +67,7 @@
     });
 
     const loadContent = async () => {
-    let response = await sendRequest(`http://localhost:5000/media_dl/api/info/${request_id[i]}`);
+    let response = await sendRequest(`/media_dl/api/info/${request_id[i]}`);
     console.log(response);
 
     const contentItem = document.createElement('div');
