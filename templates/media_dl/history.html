@@ -1,0 +1,93 @@
+<head>
+    <title>管理者用ページ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(0, 0, 0);
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+            margin: 0;
+            padding: 40px;
+        }
+        h3 {
+            font-size: 30px;
+            color: white;
+        }
+        #contents {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .content-item {
+            width: 30%;
+            margin-bottom: 20px;
+        }
+        a {
+            color: aqua;
+        }
+    </style>
+</head>
+
+<div>
+    <h3>
+    総info数：{{ info_count_all }}<br>
+    ダウンロード済：{{ info_count_yes }}
+    </h3>
+</div>
+
+<div id="contents"></div>
+
+
+<script>
+    async function sendRequest(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error during fetch:', error);
+            throw error;
+        }
+    }
+
+    const contents = document.getElementById('contents');
+    const request_id = [{{ request_id|map('tojson')|join(', ') }}];
+    let i = 0;
+    const infiniteScrollObserver = new IntersectionObserver(async (entries) => {
+        entries.forEach(async (entry) => {
+            if (!entry.isIntersecting) return;
+
+            infiniteScrollObserver.unobserve(entry.target);
+            await loadContent();
+
+        });
+    });
+
+    const loadContent = async () => {
+    let response = await sendRequest(`http://localhost:5000/media_dl/api/info/${request_id[i]}`);
+    console.log(response);
+
+    const contentItem = document.createElement('div');
+    contentItem.classList.add('content-item');
+    contentItem.innerHTML = `
+        <div>
+            <a href="${response.link}" target="_blank" id="url">${response.title}</a>
+            <br><br>
+            <a href="${response.download_url}" target="_blank"><img src="${response.thumbnail}" style="width: 100%; height: auto; border: 1px solid #ccc;"></a>
+        </div>
+        <div><br><br><br><br></div>
+    `;
+
+    contents.appendChild(contentItem);
+
+    i++;
+    if (i < request_id.length) {
+        infiniteScrollObserver.observe(contents.lastElementChild);
+    }
+};
+
+loadContent();
+</script>
