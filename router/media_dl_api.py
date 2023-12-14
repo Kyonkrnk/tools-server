@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Response
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse
 
 import re
 from urllib.parse import quote

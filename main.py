@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from router import media_dl, media_dl_download, media_dl_api, media_dl_adm
+from router import sus2svg
 
 import json
 with open("config.json", encoding="utf-8") as f:
@@ -22,6 +23,7 @@ app.include_router(media_dl.router)
 app.include_router(media_dl_download.router)
 app.include_router(media_dl_api.router)
 app.include_router(media_dl_adm.router)
+app.include_router(sus2svg.router)
 
 
 @app.get('/')
