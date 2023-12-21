@@ -107,29 +107,29 @@
             intervalId = setInterval(sendRequest, 2000); // 2秒ごとにリクエストを送信する
         })
 
-        function sendRequest() 
-        {
-            const xhr = new XMLHttpRequest();
+        async function sendRequest() {
             const url = "{{ request_url }}";
-            xhr.open("GET", url, true);
-            xhr.onreadystatechange = function () 
-            {   if (xhr.readyState === 4 && xhr.status === 307)
-                {
-                    return
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`エラーが発生しました。 コード:${response.status}`);
                 }
-                if (xhr.readyState === 4 && xhr.status === 200) 
-                {
-                    downloadMessage.textContent = JSON.parse(xhr.responseText).message;
-                }
-                if (JSON.parse(xhr.responseText).status === "yes")
-                {   
-                    clearInterval(intervalId)
-                    window.location.href = JSON.parse(xhr.responseText).download_url;
-                }
-            }
-            xhr.send();
-        }
+                else if (response.redirected) {
+                    return;
+                } 
 
+                const responseData = await response.json();
+                downloadMessage.textContent = responseData.message;
+                
+                if (responseData.status === "yes") {
+                    clearInterval(intervalId);
+                    window.location.href = responseData.download_url;
+                }
+
+            } catch (error) {
+                console.error(`エラーが発生しました。${error}`);
+            }
+        }
     </script>
 
 </html>

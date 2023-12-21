@@ -66,18 +66,15 @@
     <h1>以下の動画をダウンロードしますか？</h1>
     <div class="flex">
         <table>
-            <tr>
-                <tr style="background-color: white;">
+            <tr style="background-color: white;">
                 <th>タイトル</th>
                 <td>{{ title }}</td>
             </tr>
-            <tr>
-                <tr style="background-color: white;">
+            <tr style="background-color: white;">
                 <th>URL</th>
                 <td>{{ url }}</td>
             </tr>
-            <tr>
-                <tr style="background-color: white;">
+            <tr style="background-color: white;">
                 <th>フォーマット</th>
                 <td>{{ format }}</td>
             </tr>
@@ -96,41 +93,39 @@
 
         let intervalId;
 
-        downloadButton.addEventListener("click", () => 
-        {
-            downloadButton.disabled = true; // ボタンを無効化
-            downloadButton.style.backgroundColor = "limegreen"; // ボタンを黄緑に変更
-            downloadMessage.style.display = "block"; // ダウンロードメッセージを表示する
+        downloadButton.addEventListener("click", () => {
+            downloadButton.disabled = true;
+            downloadButton.style.backgroundColor = "limegreen";
+            downloadMessage.style.display = "block";
 
-            /* ポーリングを行う */
+            // サーバーと通信を行い処理状況を取得する
             sendRequest();
-            intervalId = setInterval(sendRequest, 1000); // 1秒ごとにリクエストを送信する
-        })
+            intervalId = setInterval(sendRequest, 1000);
+        });
 
-        function sendRequest() 
-        {
-            const xhr = new XMLHttpRequest();
+        async function sendRequest() {
             const url = "{{ request_url }}";
-            xhr.open("GET", url, true);
-            xhr.onreadystatechange = function () 
-            {   
-                if (xhr.readyState === 4 && xhr.status === 307)
-                {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`エラーが発生しました。 コード:${response.status}`);
+                }
+                else if (response.redirected) {
                     return;
-                }
-                else if (xhr.readyState === 4 && xhr.status === 200) 
-                {
-                    downloadMessage.textContent = JSON.parse(xhr.responseText).message;
-                }
-                else if (JSON.parse(xhr.responseText).status === "yes")
-                {   
-                    clearInterval(intervalId)
-                    window.location.href = JSON.parse(xhr.responseText).download_url;
-                }
-            }
-            xhr.send();
-        }
+                } 
 
+                const responseData = await response.json();
+                downloadMessage.textContent = responseData.message;
+                
+                if (responseData.status === "yes") {
+                    clearInterval(intervalId);
+                    window.location.href = responseData.download_url;
+                }
+
+            } catch (error) {
+                console.error(`エラーが発生しました。${error}`);
+            }
+        }
     </script>
 
 </html>
