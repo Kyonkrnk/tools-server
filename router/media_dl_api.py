@@ -3,35 +3,37 @@ from fastapi.responses import RedirectResponse
 
 import re
 from urllib.parse import quote
-import router.media_dl_json as media_dl_json
+from db import db
 
 router = APIRouter()
 
 @router.get('/media_dl/api/status/{request_id}')
 def media_status(request_id: str):
-    info = media_dl_json.load_json(request_id)
-    status = info["status"]
+    database = db.media_dl()
+    request_data = database.load_request_data(request_id)
+    status = request_data[5]
     if status == "no":
         return RedirectResponse(f"/media_dl/download/{request_id}")
     elif status == "downloading":
         # ニコニコでprogress_hookが機能しない、なんで。
         try:
-            percent = info["percent"]
+            percent = request_data[9]
             return {"message": f"ダウンロード中です...(進捗状況：{percent}%)", "status": status}
         except:
             return {"message": f"ダウンロード中です...", "status": status}
     elif status == "silence_removing":
         return {"message": "空白を削除中です...", "status": status}
     elif status == "yes":
-        return {"message": "ダウンロードが完了しました！", "status": status, "download_url": info["download_url"]}
+        return {"message": "ダウンロードが完了しました！", "status": status, "download_url": request_data[11]}
     
 
 @router.get('/media_dl/api/download/{request_id}')
 def response_media(request_id: str):
-    info = media_dl_json.load_json(request_id)
-    path = info["path"]
-    title = info["title"]
-    format = info["format"]
+    database = db.media_dl()
+    request_data = database.load_request_data(request_id)
+    path = request_data[10]
+    title = request_data[1]
+    format = request_data[7]
     # ファイル名に使えない文字を除外する
     title = re.sub(r'[\\/:*?"<>|]+', '', title)
     # ファイル名が長すぎる場合保存できないので短くする
@@ -54,13 +56,14 @@ def response_media(request_id: str):
 
 @router.get('/media_dl/api/info/{request_id}')
 def response_info(request_id: str):
-    data = media_dl_json.load_json(request_id)
+    database = db.media_dl()
+    request_data = database.load_request_data(request_id)
     response = {
-        "time": data["time"],
-        "title": data["title"],
-        "link": data["url"],
-        "format": data["format"],
-        "thumbnail": data["thumbnail"],
-        "download_url": data["download_url"]
+        "time": request_data[6],
+        "title": request_data[1],
+        "link": request_data[2],
+        "format": request_data[7],
+        "thumbnail": request_data[3],
+        "download_url": request_data[11]
     }
     return response

@@ -9,6 +9,7 @@ import requests
 import json
 import uuid
 import datetime
+from db import db
 from urllib.parse import quote
 
 router = APIRouter()
@@ -70,7 +71,8 @@ def media_dl_info(
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')
     with yt_dlp.YoutubeDL() as ydl:
         info = ydl.extract_info(url, download=False)
-        info_dict = {
+        data = {
+            'request_id': request_id,
             'status': "no",
             'time': now,
             'id': info["id"],
@@ -80,19 +82,18 @@ def media_dl_info(
             'silence': silence,
             'thumbnail': info['thumbnail']
         }
-        path = os.path.join("media_info", f"{request_id}.json")
-        with open(path, "w", encoding="UTF-8") as fileobj:
-            json.dump(info_dict, fileobj, indent=4, ensure_ascii=False)
-
+        database = db.media_dl()
+        database.save(data)
+    
     if "youtu" in url:
         return templates.TemplateResponse(
                     "info_youtube.html",
                     {   
                         "request": request,
-                        "title": info_dict['title'], 
+                        "title": data['title'], 
                         "url": url, 
                         "format": format, 
-                        "v_id": info_dict["id"],
+                        "v_id": data["id"],
                         "request_url": request_url
                     }
                 )
@@ -101,10 +102,10 @@ def media_dl_info(
                     "info_niconico.html",
                     {   
                         "request": request,
-                        "title": info_dict['title'], 
+                        "title": data['title'], 
                         "url": url, 
                         "format": format, 
-                        "v_id": info_dict["id"],
+                        "v_id": data["id"],
                         "request_url": request_url
                     }
                 )
@@ -113,11 +114,11 @@ def media_dl_info(
                     "info.html",
                     {   
                         "request": request,
-                        "title": info_dict['title'], 
+                        "title": data['title'], 
                         "url": url, 
                         "format": format, 
-                        "v_id": info_dict["id"], 
-                        "thumbnail": info["thumbnail"],
+                        "v_id": data["id"], 
+                        "thumbnail": data["thumbnail"],
                         "request_url": request_url
                     }
                 )    

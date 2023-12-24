@@ -4,44 +4,45 @@ import os
 import re
 import yt_dlp
 import subprocess
-import router.media_dl_json as media_dl_json
+from db import db
 
 currentpath = os.getcwd()
 router = APIRouter()
 
-def update_status(request_id, status):
-    write_data = {
+def update_status(request_id, status, database):
+    data = {
         "status": status
     }
-    media_dl_json.write_json(request_id, write_data)
+    database.update(request_id, data)
 
-def update_info(request_id, path):
-    write_data = {
+def update_info(request_id, path, database):
+    data = {
         "path": path,
         "status": "yes",
         "download_url": f"/media_dl/api/download/{request_id}"
     }
-    media_dl_json.write_json(request_id, write_data)
+    database.update(request_id, data)
 
 pattern = re.compile(r'(\d+\.\d+)%')
-def progress_hook(progress_data, request_id):
+def progress_hook(progress_data, request_id, database):
     if progress_data['status'] == 'downloading':
         percent = re.search(pattern, progress_data['_percent_str'])
         if percent != None:
-            info = {
+            data = {
                 "percent": percent.group(1)
             }
-            media_dl_json.write_json(request_id, info)
+            database.update(request_id, data)
 
 
 
 @router.get('/media_dl/download/{request_id}')
 def download_media(request_id: str):  
-    info = media_dl_json.load_json(request_id)
-    url = info["url"]
-    title = info["title"]
-    format = info["format"]
-    silence = bool(info["silence"])
+    database = db.media_dl()
+    request_data = database.load_request_data(request_id)
+    url = request_data[2]
+    title = request_data[1]
+    format = request_data[7]
+    silence = request_data[8]
     # ファイル名に使えない文字を除外する
     title = re.sub(r'[\\/:*?"<>|]+', '', title)
     # ファイル名が長すぎる場合保存できないので短くする
@@ -56,7 +57,7 @@ def download_media(request_id: str):
         'outtmpl': f'./media/{title}.{format}',
         'noplaylist': True,
         'user_agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-        'progress_hooks': [lambda progress_data: progress_hook(progress_data, request_id)],
+        'progress_hooks': [lambda progress_data: progress_hook(progress_data, request_id, database)],
     }
     if format == 'wav':
         ydl_opts['postprocessors'] = [
@@ -78,14 +79,14 @@ def download_media(request_id: str):
         ydl_opts['format'] = 'bestaudio/best'
         ydl_opts['outtmpl'] = f'./media/{title}'
 
-    update_status(request_id, "downloading")
+    update_status(request_id, "downloading", database)
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
 
     # 空白カットが選択されていた場合
     if (silence == True) and (format != "mp4"):
-        update_status(request_id, "silence_removing")
+        update_status(request_id, "silence_removing", database)
         filepath = os.path.join(currentpath, "media", f"{title}.{format}")
         command = [
             'ffmpeg',
@@ -142,9 +143,9 @@ def download_media(request_id: str):
         os.remove(f"media/{title}.{format}")
 
         # infoファイルを更新する
-        update_info(request_id, f"media/cut_{title}.{format}")
+        update_info(request_id, f"media/cut_{title}.{format}", database)
         return
     
     # infoファイルを更新する
-    update_info(request_id, f"media/{title}.{format}")
+    update_info(request_id, f"media/{title}.{format}", database)
     return

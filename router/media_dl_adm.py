@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 import os
 import json
 import glob
+from db import db
 
 router = APIRouter()
 templates_path = os.path.join("templates", "media_dl")
@@ -18,18 +19,18 @@ def history(p: str, request: Request):
         data = json.load(f)
         if p != data["password"]:
             return Response(status_code=404)
-    
+        
+    database = db.media_dl()
+    request_data = database.load("time", desc=True)
+
     request_id = []
     info_count_all = 0
     info_count_yes = 0
-    info_list = glob.glob("media_info/*.json")
-    for info in info_list:
+    for info in request_data:
         info_count_all += 1
-        with open(info, encoding="utf-8") as f:
-            data = json.load(f)
-            if data["status"] == "yes":
-                info_count_yes += 1
-                request_id.append(os.path.basename(info).split(".", 1)[0])
+        if info[5] == "yes":
+            info_count_yes += 1
+            request_id.append(info[0])
 
     return templates.TemplateResponse(
         "history.html",
