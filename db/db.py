@@ -86,11 +86,13 @@ if __name__ == "__main__":
         database.delete(request_id)
         print("削除しました。")
     elif mode == "4":
+        import os
         import glob
         import json
         for path in glob.glob("../media_info/*.json"):
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
+                data["request_id"] = os.path.basename(path).split(".", 1)[0]
                 database.save(data)
                 print(f"{path}のデータを保存しました。")
 else:
