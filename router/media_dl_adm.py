@@ -3,7 +3,6 @@ from fastapi.templating import Jinja2Templates
 
 import os
 import json
-import glob
 from db import db
 
 router = APIRouter()
