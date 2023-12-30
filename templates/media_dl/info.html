@@ -15,22 +15,30 @@
         h1 {
             color: white;
         }
-        table {
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            width: auto;
-            margin: 0 auto;
-        }
-        th, td {
-            border: 1px solid #999;
-            padding: 12px;
+        form {
+            max-width: 500px;
+            margin: auto;
+            font-size: large;
             text-align: center;
-            vertical-align: top;
-            font-size: 20px;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        th {
-            background-color: #eee;
-            font-weight: bold;
+        input[type="text"],
+        select {
+            width: 90%;
+            padding: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: medium;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #495057;
         }
         input[type="submit"] {
             display: inline-block;
@@ -65,26 +73,23 @@
 <body>
     <h1>以下の動画をダウンロードしますか？</h1>
     <div class="flex">
-        <table>
-            <tr>
-                <tr style="background-color: white;">
-                <th>タイトル</th>
-                <td>{{ title }}</td>
-            </tr>
-            <tr>
-                <tr style="background-color: white;">
-                <th>URL</th>
-                <td>{{ url }}</td>
-            </tr>
-            <tr>
-                <tr style="background-color: white;">
-                <th>フォーマット</th>
-                <td>{{ format }}</td>
-            </tr>
-        </table>
         <img src="{{ thumbnail }}" width="50%" height="auto">
+        <form id="download-form">
+            <label for="format">フォーマット</label>
+            <select id="format" name="format">
+                <option value="mp3">MP3</option>
+                <option value="wav">WAV</option>
+                <option value="mp4">MP4</option>
+            </select>
+            <br>
+            <label for="silence">音楽が始まるまでの空白を削除する</label>
+            <select id="silence" name="silence">
+                <option value="false">削除しない</option>
+                <option value="true">削除する (mp3、wavの場合のみ使用可能)</option>
+            </select>
+            <input type="submit" value="この動画をダウンロードする！" id="download-button">
+        </form> 
     </div>
-    <input type="submit" value="この動画をダウンロードする！" id="download-button">
     <div id="download-message" class="download-message" style="display: none;">
         ダウンロード中です...<p>サーバーの負荷状況によって時間がかかる場合があります。</p>
     </div>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Form
 
 import os
 import re
@@ -42,7 +42,7 @@ def download_media(request_id: str):
     url = request_data[2]
     title = request_data[1]
     format = request_data[7]
-    silence = request_data[8]
+    silence = bool(request_data[8])
     # ファイル名に使えない文字を除外する
     title = re.sub(r'[\\/:*?"<>|]+', '', title)
     # ファイル名が長すぎる場合保存できないので短くする
@@ -142,10 +142,8 @@ def download_media(request_id: str):
         subprocess.run(command)
         os.remove(f"media/{title}.{format}")
 
-        # infoファイルを更新する
         update_info(request_id, f"media/cut_{title}.{format}", database)
         return
     
-    # infoファイルを更新する
     update_info(request_id, f"media/{title}.{format}", database)
     return

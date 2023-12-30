@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Response
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter
+from fastapi.responses import RedirectResponse, FileResponse
 
 import re
 from urllib.parse import quote
@@ -8,8 +8,13 @@ from db import db
 router = APIRouter()
 
 @router.get('/media_dl/api/status/{request_id}')
-def media_status(request_id: str):
+def media_status(
+    request_id: str,
+    format: str = None,
+    silence: bool = False
+):
     database = db.media_dl()
+    database.update(request_id, data={"format": format, "silence": silence})
     request_data = database.load_request_data(request_id)
     status = request_data[5]
     if status == "no":
@@ -42,15 +47,7 @@ def response_media(request_id: str):
         if len(title.encode()) < 160:
             title += "_"
 
-    # ファイルを返す
-    with open(path, "rb") as f:
-        data = f.read()
-    response = Response(
-        content = data, 
-        media_type = "application/octet-stream",
-        headers = {"Content-Length": str(len(data)), "Content-Disposition": f'attachment; filename="{quote(title)}.{quote(format)}"'},
-        status_code = 200
-    )
+    response = FileResponse(path, filename=f"{title}.{format}")
     return response
 
 

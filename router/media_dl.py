@@ -29,8 +29,6 @@ def media_dl_form():
 def media_dl_info(
     request: Request,
     url = Form(None), 
-    format = Form(), 
-    silence: bool = Form(),
     ):
     # urlが入力されていない場合
     if url == None:
@@ -43,8 +41,8 @@ def media_dl_info(
         query = "?" + "&".join(query)
         url = url[0] + query
 
-    # 水板からのダウンロードが選択された場合
-    if format == "cc":
+    # 水板からのダウンロード
+    if ("cc.sevenc7c.com" in url) or ("chcy-" in url):
         if "http" in url:
             url = url.split('/')
             url = url[-1]
@@ -53,7 +51,7 @@ def media_dl_info(
         level_url = f"https://cc.sevenc7c.com/sonolus/levels/chcy-{url}"
         info_resp = requests.get(level_url)
         if info_resp.status_code != 200:
-            return "正しい譜面IDか確認してください。"
+            return "正しいurlか確認してください。"
         song_name = quote(info_resp.json()["item"]["title"])
         song_name = re.sub(r'[\\/:*?"<>|]+', '', song_name)
         bgm_url = info_resp.json()["item"]["bgm"]["url"]
@@ -65,6 +63,30 @@ def media_dl_info(
             status_code = 200
         )
         return response
+    
+    # 芋葉からのダウンロード
+    if ("ptlv.sevenc7c.com" in url) or ("ptlv-" in url):
+        if "http" in url:
+            url = url.split('/')
+            url = url[-1]
+        if "ptlv-" in url:
+            url = url.replace("ptlv-", "")
+        level_url = f"https://ptlv.sevenc7c.com/sonolus/levels/ptlv-{url}"
+        info_resp = requests.get(level_url)
+        if info_resp.status_code != 200:
+            return "正しいurlか確認してください。"
+        song_name = quote(info_resp.json()["item"]["title"])
+        song_name = re.sub(r'[\\/:*?"<>|]+', '', song_name)
+        bgm_url = info_resp.json()["item"]["bgm"]["url"]
+        bgm_data = requests.get(bgm_url).content        
+        response = Response(
+            content = bgm_data, 
+            media_type = "application/octet-stream",
+            headers = {"Content-Length": str(len(bgm_data)), "Content-Disposition": f'attachment; filename="{song_name}.mp3"'},
+            status_code = 200
+        )
+        return response
+
     
     request_id = str(uuid.uuid4())
     request_url = f"{host}/media_dl/api/status/{request_id}"
@@ -78,8 +100,6 @@ def media_dl_info(
             'id': info["id"],
             'title': info['title'],
             'url': url,
-            'format': format,
-            'silence': silence,
             'thumbnail': info['thumbnail']
         }
         database = db.media_dl()
@@ -90,9 +110,8 @@ def media_dl_info(
                     "info_youtube.html",
                     {   
                         "request": request,
-                        "title": data['title'], 
+                        "request_id": request_id,
                         "url": url, 
-                        "format": format, 
                         "v_id": data["id"],
                         "request_url": request_url
                     }
@@ -102,9 +121,8 @@ def media_dl_info(
                     "info_niconico.html",
                     {   
                         "request": request,
+                        "request_id": request_id,
                         "title": data['title'], 
-                        "url": url, 
-                        "format": format, 
                         "v_id": data["id"],
                         "request_url": request_url
                     }
@@ -114,9 +132,8 @@ def media_dl_info(
                     "info.html",
                     {   
                         "request": request,
-                        "title": data['title'], 
+                        "request_id": request_id,
                         "url": url, 
-                        "format": format, 
                         "v_id": data["id"], 
                         "thumbnail": data["thumbnail"],
                         "request_url": request_url
