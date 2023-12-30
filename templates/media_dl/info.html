@@ -113,7 +113,7 @@
         })
 
         async function sendRequest() {
-            const url = "{{ request_url }}";
+            const url = `{{ request_url }}?format=${form.elements["format"].value}&silence=${form.elements["silence"].value}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
