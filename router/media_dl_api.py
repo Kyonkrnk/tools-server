@@ -11,13 +11,13 @@ router = APIRouter()
 def media_status(
     request_id: str,
     format: str = None,
-    silence: bool = False
+    silence: str = False
 ):
     database = db.media_dl()
-    database.update(request_id, data={"format": format, "silence": silence})
     request_data = database.load_request_data(request_id)
     status = request_data[5]
     if status == "no":
+        database.update(request_id, data={"format": format, "silence": silence, "status": None})
         return RedirectResponse(f"/media_dl/download/{request_id}")
     elif status == "downloading":
         # ニコニコでprogress_hookが機能しない、なんで。
@@ -47,7 +47,7 @@ def response_media(request_id: str):
         if len(title.encode()) < 160:
             title += "_"
 
-    response = FileResponse(path, filename=f"{title}.{format}")
+    response = FileResponse(path)
     return response
 
 

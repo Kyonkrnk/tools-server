@@ -42,7 +42,7 @@ def download_media(request_id: str):
     url = request_data[2]
     title = request_data[1]
     format = request_data[7]
-    silence = bool(request_data[8])
+    silence = request_data[8]
     # ファイル名に使えない文字を除外する
     title = re.sub(r'[\\/:*?"<>|]+', '', title)
     # ファイル名が長すぎる場合保存できないので短くする
@@ -85,7 +85,7 @@ def download_media(request_id: str):
 
 
     # 空白カットが選択されていた場合
-    if (silence == True) and (format != "mp4"):
+    if (silence == "true") and (format != "mp4"):
         update_status(request_id, "silence_removing", database)
         filepath = os.path.join(currentpath, "media", f"{title}.{format}")
         command = [
