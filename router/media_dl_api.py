@@ -47,8 +47,7 @@ def response_media(request_id: str):
         if len(title.encode()) < 160:
             title += "_"
 
-    response = FileResponse(path)
-    return response
+    return FileResponse(path, filename=f"{title}.{format}")
 
 
 @router.get('/media_dl/api/info/{request_id}')
