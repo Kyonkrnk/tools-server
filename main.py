@@ -28,7 +28,7 @@ app.include_router(sus2svg.router)
 
 @app.get('/')
 def index():
-    return {"message": "Hello, World!"}
+    return FileResponse("templates/index.html")
 
 @app.get('/favicon.ico', include_in_schema=False)
 def icon():
