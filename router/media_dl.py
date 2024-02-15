@@ -41,14 +41,20 @@ def media_dl_info(
         query = "?" + "&".join(query)
         url = url[0] + query
 
-    # 水板からのダウンロード
+    # 水板もしくは芋葉からのダウンロード
     if ("cc.sevenc7c.com" in url) or ("chcy-" in url):
+        subdomain = "cc"
+        plefix = "chcy"
+    if ("ptlv.sevenc7c.com" in url) or ("ptlv-" in url):
+        subdomain = "ptlv"
+        plefix = "ptlv"
+    if "plefix" in locals():
         if "http" in url:
             url = url.split('/')
             url = url[-1]
         if "chcy-" in url:
-            url = url.replace("chcy-", "")
-        level_url = f"https://cc.sevenc7c.com/sonolus/levels/chcy-{url}"
+            url = url.replace(f"{plefix}-", "")
+        level_url = f"https://{subdomain}.sevenc7c.com/sonolus/levels/{plefix}-{url}"
         info_resp = requests.get(level_url)
         if info_resp.status_code != 200:
             return "正しいurlか確認してください。"
@@ -63,30 +69,6 @@ def media_dl_info(
             status_code = 200
         )
         return response
-    
-    # 芋葉からのダウンロード
-    if ("ptlv.sevenc7c.com" in url) or ("ptlv-" in url):
-        if "http" in url:
-            url = url.split('/')
-            url = url[-1]
-        if "ptlv-" in url:
-            url = url.replace("ptlv-", "")
-        level_url = f"https://ptlv.sevenc7c.com/sonolus/levels/ptlv-{url}"
-        info_resp = requests.get(level_url)
-        if info_resp.status_code != 200:
-            return "正しいurlか確認してください。"
-        song_name = quote(info_resp.json()["item"]["title"])
-        song_name = re.sub(r'[\\/:*?"<>|]+', '', song_name)
-        bgm_url = info_resp.json()["item"]["bgm"]["url"]
-        bgm_data = requests.get(bgm_url).content        
-        response = Response(
-            content = bgm_data, 
-            media_type = "application/octet-stream",
-            headers = {"Content-Length": str(len(bgm_data)), "Content-Disposition": f'attachment; filename="{song_name}.mp3"'},
-            status_code = 200
-        )
-        return response
-
     
     request_id = str(uuid.uuid4())
     request_url = f"{host}/media_dl/api/status/{request_id}"
