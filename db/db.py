@@ -8,7 +8,7 @@ class media_dl:
         self.table_name = "media_dl"
         self.conn = sqlite3.connect(dbname)
         self.c = self.conn.cursor()
-        print("データベースと接続しました。")
+        print("Database connected.")
 
     def save(self, data: dict):
         key = ", ".join(data.keys())
@@ -64,7 +64,7 @@ class media_dl:
 
     def __del__(self):
         self.conn.close()
-        print("データベースとの接続を解除しました。")
+        print("Database disconnected.")
 
 
 class sus2svg:
@@ -74,31 +74,25 @@ class sus2svg:
 
 if __name__ == "__main__":
     dbname = "server.db"
-    mode = input("1)データ挿入 2)データ更新 3)データ削除 4)jsonから変換\n-> ")
+    mode = input("1)データ挿入 2)データ更新 3)データ削除\n-> ")
     database = media_dl()
     if mode == "1":
         pass
     elif mode == "2":
-        pass
+        request_id = input("更新したいレコードのrequest_idを入力してください。\n-> ")
+        key = input("更新したいkeyを入力してください。\n-> ")
+        value = input("更新後のデータを入力してください。\n-> ")
+        database.update(request_id, {key: value})
     elif mode == "3":
         database.show_database()
         request_id = input("削除したいレコードのrequest_idを入力してください。\n-> ")
         database.delete(request_id)
         print("削除しました。")
-    elif mode == "4":
-        import os
-        import glob
-        import json
-        for path in glob.glob("../media_info/*.json"):
-            with open(path, encoding="utf-8") as f:
-                data = json.load(f)
-                data["request_id"] = os.path.basename(path).split(".", 1)[0]
-                database.save(data)
-                print(f"{path}のデータを保存しました。")
+
 else:
     # データベースがなかったら作成する。
     dbname = "db/server.db"
-    connect = sqlite3.connect(dbname)
+    connect = sqlite3.connect(dbname, check_same_thread=False)
     cur = connect.cursor()
     # テーブルがなかったら作成する。
     sqlstring = f'create table if not exists media_dl (request_id primary key, title, url, thumbnail, id, status, time, format, silence, percent, path, download_url)'
