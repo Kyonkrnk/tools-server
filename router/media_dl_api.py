@@ -5,7 +5,6 @@ import re
 from db import db
 
 router = APIRouter()
-database = db.media_dl()
 
 @router.get('/media_dl/api/status/{request_id}')
 def media_status(
@@ -13,6 +12,7 @@ def media_status(
     format: str = None,
     silence: str = False
 ):
+    database = db.media_dl()
     request_data = database.load_request_data(request_id)
     status = request_data[5]
     if status == "no":
@@ -33,6 +33,7 @@ def media_status(
 
 @router.get('/media_dl/api/download/{request_id}')
 def response_media(request_id: str):
+    database = db.media_dl()
     request_data = database.load_request_data(request_id)
     path = request_data[10]
     title = request_data[1]
@@ -50,6 +51,7 @@ def response_media(request_id: str):
 
 @router.get('/media_dl/api/info/{request_id}')
 def response_info(request_id: str):
+    database = db.media_dl()
     request_data = database.load_request_data(request_id)
     response = {
         "time": request_data[6],
