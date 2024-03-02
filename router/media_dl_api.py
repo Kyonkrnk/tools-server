@@ -2,7 +2,6 @@ from fastapi import APIRouter
 from fastapi.responses import RedirectResponse, FileResponse
 
 import re
-from urllib.parse import quote
 from db import db
 
 router = APIRouter()
