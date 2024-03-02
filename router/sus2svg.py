@@ -28,7 +28,7 @@ async def generate(fileInput: UploadFile = File(...)):
 
     # 保存する
     name = str(uuid.uuid4())
-    drawing.svg().saveas(f"svg/{name}.svg")
+    drawing.svg().saveas(f"file/{name}.svg")
     
     # 送る
-    return FileResponse(f"svg/{name}.svg")
+    return FileResponse(f"file/{name}.svg")
