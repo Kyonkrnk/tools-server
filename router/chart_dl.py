@@ -6,7 +6,7 @@ router = APIRouter()
 
 @router.get('/chart_dl/version')
 def chart_dl():
-    return {"App-Version": "1.1.0"}
+    return {"App-Version": "1.1.1"}
 
 @router.get('/chart_dl/download')
 def chart_dl_download(password: str = Header()):
