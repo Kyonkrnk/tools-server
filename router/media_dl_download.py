@@ -44,7 +44,7 @@ def download_media(request_id: str):
     format = request_data[7]
     silence = request_data[8]
     # ファイル名に使えない文字を除外する
-    title = re.sub(r'[\\/:*?"<>|]+', '', title)
+    title = re.sub(r'[\\/:*?"<>|\']+','', title)
     # ファイル名が長すぎる場合保存できないので短くする
     while len(title.encode()) >= 160:
         title = title[:-2]
