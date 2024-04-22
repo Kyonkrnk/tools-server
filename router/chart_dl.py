@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Response, Header
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 import json
 
 router = APIRouter()
 
 @router.get('/chart_dl/version')
 def chart_dl():
-    return {"App-Version": "1.3.0"}
+    return {"App-Version": "0.0.0"}
+
+@router.get('/chart_dl/api/v1/version')
+def chart_dl_version():
+    return {"App-Version": "2.0.0"}
 
 @router.get('/chart_dl/download')
 def chart_dl_download(password: str = Header()):
