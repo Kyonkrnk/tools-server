@@ -10,7 +10,7 @@ def chart_dl_version():
 
 @router.get('/chart_dl/api/v2/version')
 def chart_dl_version():
-    return {"App-Version": "2.2.1"}
+    return {"App-Version": "2.2.5"}
 
 @router.get('/chart_dl/download')
 def chart_dl_download(password: str = Header()):

@@ -23,12 +23,10 @@ def history(p: str, request: Request):
     request_data = database.load("time", desc=True)
 
     request_id = []
-    info_count_all = 0
-    info_count_yes = 0
-    for info in request_data:
-        info_count_all += 1
+    end_count = 0
+    for count, info in enumerate(request_data):
         if info[5] == "yes":
-            info_count_yes += 1
+            end_count += 1
             request_id.append(info[0])
 
     return templates.TemplateResponse(
@@ -36,7 +34,7 @@ def history(p: str, request: Request):
         {
             "request": request,
             "request_id": request_id,
-            "info_count_all": info_count_all,
-            "info_count_yes": info_count_yes
+            "count": count,
+            "end_count": end_count
         }
     )
