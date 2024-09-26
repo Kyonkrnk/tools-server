@@ -34,6 +34,10 @@ app.include_router(file_dl.router)
 def index():
     return FileResponse("templates/index.html")
 
+@app.get('/css/{filename}')
+def css(filename: str):
+    return FileResponse(f"templates/css/{filename}")
+
 @app.get('/favicon.ico', include_in_schema=False)
 def icon():
     return FileResponse("favicon.ico")
