@@ -25,7 +25,7 @@
             border-radius: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        input[type="text"],
+
         select {
             width: 90%;
             padding: 10px;
@@ -75,12 +75,27 @@
     <div class="flex">
         <script type="application/javascript" src="https://embed.nicovideo.jp/watch/{{ v_id }}/script?w=720&h=405"></script><noscript><a href="https://www.nicovideo.jp/watch/{{ v_id }}">{{ title }}</a></noscript>
         <form id="download-form">
-            <label for="format">フォーマット</label>
-            <select id="format" name="format">
-                <option value="mp3">MP3</option>
-                <option value="wav">WAV</option>
-                <option value="mp4">MP4</option>
+            <label for="ext">拡張子</label>
+            <select id="ext" name="ext">
+                <option value="mp3">.mp3</option>
+                <option value="wav">.wav</option>
+                <option value="mp4">.mp4</option>
             </select>
+            <br>
+            <div id="audio-select" style="display:none;">
+                <label for="audio-format">音声フォーマット</label>
+                <select id="audio-format" name="audio-format">
+                    {{ audio_formats | safe }}
+                </select>
+            </div>
+            <br>
+            <div id="video-select" style="display:none;">
+                <label for="video-format">動画フォーマット</label>
+                <select id="video-format" name="video-format">
+                    <option value="" disabled selected>選択してください</option>
+                    {{ video_formats | safe }}
+                </select>
+            </div>
             <br>
             <label for="silence">音楽が始まるまでの空白を削除する</label>
             <select id="silence" name="silence">
@@ -99,21 +114,54 @@
         const downloadButton = document.getElementById("download-button");
         const downloadMessage = document.getElementById("download-message");
         var form = document.getElementById("download-form");
-
+        const formatSelect = document.getElementById("ext");
+        const audioSelect = document.getElementById("audio-select");
+        const videoSelect = document.getElementById("video-select");
+        const silenceSelect = document.getElementById("silence-select");
+        
         let intervalId;
 
+        // 初期表示でのフォーマットに応じたselectタグの表示/非表示
+        updateSelectVisibility(formatSelect.value);
+
         downloadButton.addEventListener("click", () => {
+            const format = form.elements["ext"].value;
+            if (format === "mp4") {
+                if (form.elements["video-format"].value === "") {
+                    alert("未選択の項目があります。");
+                    event.preventDefault();
+                    return;
+                }
+            }
             downloadButton.disabled = true;
             downloadButton.style.backgroundColor = "limegreen";
             downloadMessage.style.display = "block";
 
             // サーバーと通信を行い処理状況を取得する
             sendRequest();
-            intervalId = setInterval(sendRequest, 3000); // 3秒ごとにリクエストを送信する
+            intervalId = setInterval(sendRequest, 1000); // 1秒ごとにリクエストを送信する
         });
 
+        // フォーマットが変更された時にselectタグを更新
+        formatSelect.addEventListener("change", (event) => {
+            updateSelectVisibility(event.target.value);
+        });
+
+        function updateSelectVisibility(format) {
+            if (format === "mp3" || format === "wav") {
+                audioSelect.style.display = "block";
+                videoSelect.style.display = "none";
+                form.elements["video-format"].value = "";
+            } else if (format === "mp4") {
+                videoSelect.style.display = "block";
+                
+            }
+        }
+
         async function sendRequest() {
-            const url = `{{ request_url }}?format=${form.elements["format"].value}&silence=${form.elements["silence"].value}`;
+            const audioFormat = form.elements["audio-format"].value;
+            const videoFormat = form.elements["video-format"].value || "";
+            const url = `{{ request_url }}?ext=${form.elements["ext"].value}&format=${videoFormat+audioFormat}&silence=${form.elements["silence"].value}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) {

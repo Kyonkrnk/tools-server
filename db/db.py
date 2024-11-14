@@ -53,6 +53,6 @@ if __name__ != "__main__":
     connect = sqlite3.connect(dbname, check_same_thread=False)
     cur = connect.cursor()
     # テーブルがなかったら作成する
-    sqlstring = f'create table if not exists media_dl (request_id primary key, title, url, thumbnail, id, status, time, format, silence, percent, path, download_url)'
+    sqlstring = f'create table if not exists media_dl (request_id primary key, title, url, thumbnail, id, status, time, ext, silence, percent, path, download_url, format)'
     cur.execute(sqlstring)
     connect.close()

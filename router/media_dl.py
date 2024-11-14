@@ -75,6 +75,7 @@ def media_dl_info(
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')
     with yt_dlp.YoutubeDL() as ydl:
         info = ydl.extract_info(url, download=False)
+        #json.dump(info["formats"], open("test.json", "w", encoding="utf-8"), indent=4, ensure_ascii=False)
         data = {
             'request_id': request_id,
             'status': "no",
@@ -87,7 +88,34 @@ def media_dl_info(
         database = db.media_dl()
         database.save(data)
     
+
+    info["formats"].sort(key=lambda x: int(x["abr"]) if x.get("abr") else 0)    
+    info["formats"].sort(key=lambda x: x.get("vcodec", ""))
+    info["formats"].reverse()
+
     if "youtu" in url:
+        audio_formats = ""
+        mp4_v_formats = ""
+        mp4_a_formats = ""
+        webm_v_formats = ""
+        webm_a_formats = ""
+        for fmt in info["formats"]:
+            if fmt["ext"] == "mhtml":
+                continue
+            # .mp4
+            # 音声
+            if fmt["vbr"] == 0 and "Default" not in fmt["format"]:
+                audio_formats += f'<option value="{fmt["format_id"]}">{fmt["acodec"].split(".")[0]} ( {round(fmt["abr"])}kbps )</option>'
+                if "mp4a" in fmt["acodec"]:
+                    mp4_a_formats += f'<option value="{fmt["format_id"]}">{fmt["acodec"].split(".")[0]} ( {round(fmt["abr"])}kbps )</option>'
+                else:
+                    webm_a_formats += f'<option value="{fmt["format_id"]}">{fmt["acodec"].split(".")[0]} ( {round(fmt["abr"])}kbps )</option>'
+            elif fmt["abr"] == 0:
+                if "avc1" in fmt["vcodec"]:
+                    mp4_v_formats += f'<option value="{fmt["format_id"]}%2B">{fmt["vcodec"].split(".")[0]} ( {fmt["resolution"]} / {round(fmt["vbr"])}kbps / {round(fmt["fps"])}fps )</option>'
+                elif "vp09" in fmt["vcodec"] or "av01" in fmt["vcodec"]:
+                    webm_v_formats += f'<option value="{fmt["format_id"]}%2B">{fmt["vcodec"].split(".")[0]} ( {fmt["resolution"]} / {round(fmt["vbr"])}kbps / {round(fmt["fps"])}fps )</option>'
+        
         return templates.TemplateResponse(
                     "info_youtube.html",
                     {   
@@ -95,10 +123,24 @@ def media_dl_info(
                         "request_id": request_id,
                         "url": url, 
                         "v_id": data["id"],
-                        "request_url": request_url
+                        "request_url": request_url,
+                        "audio_formats": audio_formats,
+                        "mp4_audio_formats": mp4_a_formats,
+                        "mp4_video_formats": mp4_v_formats,
+                        "webm_audio_formats": webm_a_formats,
+                        "webm_video_formats": webm_v_formats
                     }
                 )
+    
     elif "nico" in url:
+        v_formats = ""
+        a_formats = ""
+        for fmt in info["formats"]:
+            if "audio" in fmt["format"]:
+                a_formats += f'<option value="{fmt["format_id"]}">{fmt["acodec"]} ({round(fmt["abr"])}kbps)</option>'
+            elif "video" in fmt["format"]:
+                v_formats += f'<option value="{fmt["format_id"]}%2B">{fmt["vcodec"].split(".")[0]} ({fmt["resolution"]} {round(fmt["fps"])}fps)</option>'
+        
         return templates.TemplateResponse(
                     "info_niconico.html",
                     {   
@@ -106,7 +148,9 @@ def media_dl_info(
                         "request_id": request_id,
                         "title": data['title'], 
                         "v_id": data["id"],
-                        "request_url": request_url
+                        "request_url": request_url,
+                        "audio_formats": a_formats,
+                        "video_formats": v_formats
                     }
                 )
     else:

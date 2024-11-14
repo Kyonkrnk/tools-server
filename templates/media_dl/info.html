@@ -75,8 +75,8 @@
     <div class="flex">
         <img src="{{ thumbnail }}" width="50%" height="auto">
         <form id="download-form">
-            <label for="format">フォーマット</label>
-            <select id="format" name="format">
+            <label for="ext">フォーマット</label>
+            <select id="ext" name="ext">
                 <option value="mp3">MP3</option>
                 <option value="wav">WAV</option>
                 <option value="mp4">MP4</option>
@@ -114,7 +114,7 @@
         })
 
         async function sendRequest() {
-            const url = `{{ request_url }}?format=${form.elements["format"].value}&silence=${form.elements["silence"].value}`;
+            const url = `{{ request_url }}?ext=${form.elements["ext"].value}&silence=${form.elements["silence"].value}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) {

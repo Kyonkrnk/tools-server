@@ -76,13 +76,52 @@
     <div class="flex">
         <iframe class ="embed" width="720" height="405" src="https://www.youtube.com/embed/{{ v_id }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
         <form id="download-form">
-            <label for="format">フォーマット</label>
-            <select id="format" name="format">
-                <option value="mp3">MP3</option>
-                <option value="wav">WAV</option>
-                <option value="mp4">MP4</option>
+            <label for="ext">拡張子</label>
+            <select id="ext" name="ext">
+                <option value="mp3">.mp3</option>
+                <option value="wav">.wav</option>
+                <option value="mp4">.mp4</option>
+                <option value="webm">.webm</option>
             </select>
             <br>
+
+            <div id="audio-select" style="display:none;">
+                <label for="audio-format">音声フォーマット</label>
+                <select id="audio-format" name="audio-format">
+                    <option value="" disabled selected>選択してください</option>
+                    {{ audio_formats | safe }}
+                </select>
+            </div>
+
+            <div id="mp4-video-select" style="display:none;">
+                <label for="mp4-audio-format">音声フォーマット</label>
+                <select id="mp4-audio-format" name="mp4-audio-format">
+                    <option value="" disabled selected>選択してください</option>
+                    {{ mp4_audio_formats | safe }}
+                </select>
+                <br>
+                <label for="mp4-video-format">動画フォーマット</label>
+                <select id="mp4-video-format" name="mp4-video-format">
+                    <option value="" disabled selected>選択してください</option>
+                    {{ mp4_video_formats | safe }}
+                </select>
+            </div>
+
+            <div id="webm-video-select" style="display:none;">
+                <label for="webm-audio-format">音声フォーマット</label>
+                <select id="webm-audio-format" name="webm-audio-format">
+                    <option value="" disabled selected>選択してください</option>
+                    {{ webm_audio_formats | safe }}
+                </select>
+                <br>
+                <label for="webm-video-format">動画フォーマット</label>
+                <select id="webm-video-format" name="webm-video-format">
+                    <option value="" disabled selected>選択してください</option>
+                    {{ webm_video_formats | safe }}
+                </select>
+            </div>
+            <br>
+
             <label for="silence">音楽が始まるまでの空白を削除する</label>
             <select id="silence" name="silence">
                 <option value="false">削除しない</option>
@@ -92,7 +131,7 @@
         </form>
     </div>
     <div id="download-message" class="download-message" style="display: none;">
-        ダウンロード中です...<p>サーバーの負荷状況によって時間がかかる場合があります。 </p>
+        ダウンロード中です...<p>サーバーの負荷状況によって時間がかかる場合があります。</p>
     </div>
 </body>
 
@@ -100,22 +139,85 @@
         const downloadButton = document.getElementById("download-button");
         const downloadMessage = document.getElementById("download-message");
         var form = document.getElementById("download-form");
-
+        const formatSelect = document.getElementById("ext");
+        const audioSelect = document.getElementById("audio-select");
+        const mp4VideoSelect = document.getElementById("mp4-video-select");
+        const webmVideoSelect = document.getElementById("webm-video-select");
+        
         let intervalId;
 
+        // 初期表示でのフォーマットに応じたselectタグの表示/非表示
+        updateSelectVisibility(formatSelect.value);
+
         downloadButton.addEventListener("click", () => {
+            const format = form.elements["ext"].value;
+            if (format === "mp3" || format === "wav") {
+                if (form.elements["audio-format"].value === "") {
+                    alert("未選択の項目があります。");
+                    event.preventDefault();
+                    return;
+                }
+            } else if (format === "mp4") {
+                if (form.elements["mp4-video-format"].value === "" || form.elements["mp4-audio-format"].value === "") {
+                    alert("未選択の項目があります。");
+                    event.preventDefault();
+                    return;
+                }
+            } else if (format === "webm") {
+                if (form.elements["webm-video-format"].value === "" || form.elements["webm-audio-format"].value === "") {
+                    alert("未選択の項目があります。");
+                    event.preventDefault();
+                    return;
+                }
+            }
             downloadButton.disabled = true;
             downloadButton.style.backgroundColor = "limegreen";
             downloadMessage.style.display = "block";
 
             // サーバーと通信を行い処理状況を取得する
             sendRequest();
-            intervalId = setInterval(sendRequest, 1000);
+            intervalId = setInterval(sendRequest, 1000); // 1秒ごとにリクエストを送信する
         });
 
+        // フォーマットが変更された時にselectタグを更新
+        formatSelect.addEventListener("change", (event) => {
+            updateSelectVisibility(event.target.value);
+        });
+
+        function updateSelectVisibility(format) {
+            if (format === "mp3" || format === "wav") {
+                audioSelect.style.display = "block";
+                mp4VideoSelect.style.display = "none";
+                webmVideoSelect.style.display = "none";
+                form.elements["mp4-video-format"].value = "";
+                form.elements["mp4-audio-format"].value = "";
+                form.elements["webm-video-format"].value = "";
+                form.elements["webm-audio-format"].value = "";
+
+            } else if (format === "mp4") {
+                audioSelect.style.display = "none";
+                mp4VideoSelect.style.display = "block";
+                webmVideoSelect.style.display = "none";
+                form.elements["audio-format"].value = "";
+                form.elements["webm-video-format"].value = "";
+                form.elements["webm-audio-format"].value = "";
+            } else if (format === "webm") {
+                audioSelect.style.display = "none";
+                mp4VideoSelect.style.display = "none";
+                webmVideoSelect.style.display = "block";
+                form.elements["audio-format"].value = "";
+                form.elements["mp4-video-format"].value = "";
+                form.elements["mp4-audio-format"].value = "";
+            }
+        }
+
         async function sendRequest() {
-            
-            const url = `{{ request_url }}?format=${form.elements["format"].value}&silence=${form.elements["silence"].value}`;
+            const audioFormat = form.elements["audio-format"].value || "";
+            const mp4VideoFormat = form.elements["mp4-video-format"].value || "";
+            const mp4AudioFormat = form.elements["mp4-audio-format"].value || "";
+            const webmVideoFormat = form.elements["webm-video-format"].value || "";
+            const webmAudioFormat = form.elements["webm-audio-format"].value || "";
+            const url = `{{ request_url }}?ext=${form.elements["ext"].value}&format=${audioFormat+mp4VideoFormat+mp4AudioFormat+webmVideoFormat+webmAudioFormat}&silence=${form.elements["silence"].value}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) {

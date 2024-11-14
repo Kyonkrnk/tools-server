@@ -9,6 +9,7 @@ router = APIRouter()
 @router.get('/media_dl/api/status/{request_id}')
 def media_status(
     request_id: str,
+    ext: str = None,
     format: str = None,
     silence: str = False
 ):
@@ -16,10 +17,9 @@ def media_status(
     request_data = database.load_request_data(request_id)
     status = request_data[5]
     if status == "no":
-        database.update(request_id, data={"format": format, "silence": silence, "status": None})
+        database.update(request_id, data={"ext": ext, "format": format, "silence": silence, "status": None})
         return RedirectResponse(f"/media_dl/download/{request_id}")
     elif status == "downloading":
-        # ニコニコでprogress_hookが機能しない、なんで。
         try:
             percent = request_data[9]
             return {"message": f"ダウンロード中です...(進捗状況：{percent}%)", "status": status}
@@ -37,7 +37,7 @@ def response_media(request_id: str):
     request_data = database.load_request_data(request_id)
     path = request_data[10]
     title = request_data[1]
-    format = request_data[7]
+    ext = request_data[7]
     # ファイル名に使えない文字を除外する
     title = re.sub(r'[\\/:*?"<>|]+', '', title)
     # ファイル名が長すぎる場合保存できないので短くする
@@ -46,7 +46,7 @@ def response_media(request_id: str):
         if len(title.encode()) < 160:
             title += "_"
 
-    return FileResponse(path, filename=f"{title}.{format}")
+    return FileResponse(path, filename=f"{title}.{ext}")
 
 
 @router.get('/media_dl/api/info/{request_id}')
@@ -57,7 +57,7 @@ def response_info(request_id: str):
         "time": request_data[6],
         "title": request_data[1],
         "link": request_data[2],
-        "format": request_data[7],
+        "ext": request_data[7],
         "thumbnail": request_data[3],
         "download_url": request_data[11]
     }

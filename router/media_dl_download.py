@@ -41,34 +41,45 @@ def download_media(request_id: str):
     request_data = database.load_request_data(request_id)
     url = request_data[2]
     title = request_data[1]
-    format = request_data[7]
+    ext = request_data[7]
+    format = request_data[12]
     silence = request_data[8]
     # ファイル名に使えない文字を除外する
     title = re.sub(r'[\\/:*?"<>|\']+','', title)
     # ファイル名が長すぎる場合保存できないので短くする
-    while len(title.encode()) >= 160:
+    while len(title.encode()) >= 150:
         title = title[:-2]
-        if len(title.encode()) < 160:
+        if len(title.encode()) < 150:
             title += "_"
+
+    # ファイル名が重複していないか確認する
+    a = 0
+    while True:
+        if os.path.exists(f'./media/{title}_{a}.{ext}'):
+            a += 1
+        else:
+            fp = f'./media/{title}_{a}.{ext}'
+            break
+
+    if format == "None":
+        format = 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080][ext=mp4]+bestaudio[ext=aac]/best[height<=1080][ext=mp4]/best[ext=mp4]'
 
     # ダウンロード
     ydl_opts = {
-        'format': 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[ext=mp4]',
-        'outtmpl': f'./media/{title}.{format}',
+        'format': format,
+        'outtmpl': f"./media/{title}_{a}.%(ext)s",
         'noplaylist': True,
         'user_agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
         'progress_hooks': [lambda progress_data: progress_hook(progress_data, request_id, database)],
     }
-    if format == 'wav':
+    if ext == 'wav':
         ydl_opts['postprocessors'] = [
             {
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'wav'
             }
         ]
-        ydl_opts['format'] = 'bestaudio/best'
-        ydl_opts['outtmpl'] = f'./media/{title}'
-    if format == 'mp3':
+    if ext == 'mp3':
         ydl_opts['postprocessors'] = [
             {
                 'key': 'FFmpegExtractAudio',
@@ -76,8 +87,6 @@ def download_media(request_id: str):
                 'preferredquality': '320'
             }
         ]
-        ydl_opts['format'] = 'bestaudio/best'
-        ydl_opts['outtmpl'] = f'./media/{title}'
 
     update_status(request_id, "downloading", database)
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -85,9 +94,9 @@ def download_media(request_id: str):
 
 
     # 空白カットが選択されていた場合
-    if (silence == "true") and (format != "mp4"):
+    if (silence == "true") and (ext != "mp4") and (ext != "webm"):
         update_status(request_id, "silence_removing", database)
-        filepath = os.path.join(currentpath, "media", f"{title}.{format}")
+        filepath = os.path.join(currentpath, fp)
         command = [
             'ffmpeg',
             '-i', filepath,
@@ -121,29 +130,29 @@ def download_media(request_id: str):
                         else:
                             return "空白が1分以上あるため処理に失敗しました。"
                         break
-
-        if format == "mp3":
+        
+        fp = fp[:8] + "cut_" + fp[8:]
+        if ext == "mp3":
             command = [
                 'ffmpeg',
                 '-y',
                 '-ss', f'{silence_time}',
                 '-i', filepath,
                 '-b:a', '320k',
-                f"media/cut_{title}.{format}"
+                fp
             ]
-        if format == "wav":
+        if ext == "wav":
             command = [
                 'ffmpeg',
                 '-y',
                 '-ss', f'{silence_time}',
                 '-i', filepath,
-                f"media/cut_{title}.{format}"
+                fp
             ]
         subprocess.run(command)
-        os.remove(f"media/{title}.{format}")
 
-        update_info(request_id, f"media/cut_{title}.{format}", database)
+        update_info(request_id, fp, database)
         return
     
-    update_info(request_id, f"media/{title}.{format}", database)
+    update_info(request_id, fp, database)
     return
