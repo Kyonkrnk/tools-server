@@ -2,7 +2,6 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, RedirectResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-from zstd_asgi import ZstdMiddleware
 
 from router import media_dl, media_dl_download, media_dl_api, media_dl_adm
 from router import sus2svg
@@ -25,11 +24,6 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
-app.add_middleware(
-    ZstdMiddleware,
-    level=3,
-    gzip_fallback=True,
 )
 app.include_router(media_dl.router)
 app.include_router(media_dl_download.router)
