@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "tools-server"
+version = "0.1.0"
+description = ""
+authors = ["kyonkrnk"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.115.5"
+requests = "^2.32.3"
+yt-dlp = "^2024.11.4"
+uvicorn = "^0.32.0"
+pjsekai-scores = "^0.1.10"
+jinja2 = "^3.1.4"
+python-multipart = "^0.0.17"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
