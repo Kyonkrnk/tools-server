@@ -1,7 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from zstd_asgi import ZstdMiddleware
 
 from router import media_dl, media_dl_download, media_dl_api, media_dl_adm
 from router import sus2svg
@@ -16,10 +17,19 @@ with open("config.json", encoding="utf-8") as f:
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[host],
+    allow_origins=[
+        host,
+        "http://localhost:5000",
+        "http://127.0.0.1:5000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+app.add_middleware(
+    ZstdMiddleware,
+    level=3,
+    gzip_fallback=True,
 )
 app.include_router(media_dl.router)
 app.include_router(media_dl_download.router)
@@ -30,9 +40,12 @@ app.include_router(chart_dl.router)
 app.include_router(file_dl.router)
 
 
-@app.get('/')
+with open("templates/index.html", "r", encoding="UTF-8") as f:
+    idx_content = f.read()
+
+@app.get('/', response_class=HTMLResponse)
 def index():
-    return FileResponse("templates/index.html")
+    return idx_content
 
 @app.get('/css/{filename}')
 def css(filename: str):

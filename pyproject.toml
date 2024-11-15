@@ -14,6 +14,7 @@ uvicorn = "^0.32.0"
 pjsekai-scores = "^0.1.10"
 jinja2 = "^3.1.4"
 python-multipart = "^0.0.17"
+zstd-asgi = "^0.2"
 
 
 [build-system]

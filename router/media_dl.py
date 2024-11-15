@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, Response, HTMLResponse
 
 import re
 import os
@@ -19,11 +19,16 @@ with open("config.json", encoding="utf-8") as f:
     conf = json.load(f)
     host = conf["Host"]
 
+with open(
+    os.path.join("templates", "media_dl", "index.html"),
+    "r",
+    encoding="UTF-8"
+) as f:
+    mdl_content = f.read()
 
-@router.get('/media_dl')
+@router.get('/media_dl', response_class=HTMLResponse)
 def media_dl_form():
-    path = os.path.join("templates", "media_dl", "index.html")
-    return FileResponse(path)
+    return mdl_content
 
 @router.post('/media_dl')
 def media_dl_info(
