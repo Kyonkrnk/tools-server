@@ -86,7 +86,7 @@
             <br>
 
             <div id="audio-select" style="display:none;">
-                <label for="audio-format">音声フォーマット</label>
+                <label for="audio-format">音声コーデック</label>
                 <select id="audio-format" name="audio-format">
                     <option value="" disabled selected>選択してください</option>
                     {{ audio_formats | safe }}
@@ -94,13 +94,13 @@
             </div>
 
             <div id="mp4-video-select" style="display:none;">
-                <label for="mp4-audio-format">音声フォーマット</label>
+                <label for="mp4-audio-format">音声コーデック</label>
                 <select id="mp4-audio-format" name="mp4-audio-format">
                     <option value="" disabled selected>選択してください</option>
                     {{ mp4_audio_formats | safe }}
                 </select>
                 <br>
-                <label for="mp4-video-format">動画フォーマット</label>
+                <label for="mp4-video-format">動画コーデック</label>
                 <select id="mp4-video-format" name="mp4-video-format">
                     <option value="" disabled selected>選択してください</option>
                     {{ mp4_video_formats | safe }}
@@ -108,13 +108,13 @@
             </div>
 
             <div id="webm-video-select" style="display:none;">
-                <label for="webm-audio-format">音声フォーマット</label>
+                <label for="webm-audio-format">音声コーデック</label>
                 <select id="webm-audio-format" name="webm-audio-format">
                     <option value="" disabled selected>選択してください</option>
                     {{ webm_audio_formats | safe }}
                 </select>
                 <br>
-                <label for="webm-video-format">動画フォーマット</label>
+                <label for="webm-video-format">動画コーデック</label>
                 <select id="webm-video-format" name="webm-video-format">
                     <option value="" disabled selected>選択してください</option>
                     {{ webm_video_formats | safe }}

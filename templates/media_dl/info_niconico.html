@@ -83,14 +83,14 @@
             </select>
             <br>
             <div id="audio-select" style="display:none;">
-                <label for="audio-format">音声フォーマット</label>
+                <label for="audio-format">音声コーデック</label>
                 <select id="audio-format" name="audio-format">
                     {{ audio_formats | safe }}
                 </select>
             </div>
             <br>
             <div id="video-select" style="display:none;">
-                <label for="video-format">動画フォーマット</label>
+                <label for="video-format">動画コーデック</label>
                 <select id="video-format" name="video-format">
                     <option value="" disabled selected>選択してください</option>
                     {{ video_formats | safe }}
